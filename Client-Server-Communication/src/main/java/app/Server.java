@@ -6,7 +6,8 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -15,7 +16,7 @@ public class Server implements Runnable{
     private ServerSocket server;
 
     // Connected clinents
-    private ArrayList<ConnectionHandler> connections;
+    private List<ConnectionHandler> connections;
 
     // Working server
     private boolean working;
@@ -24,7 +25,7 @@ public class Server implements Runnable{
     private ExecutorService pool;
 
     public Server(){
-        connections = new ArrayList<>();
+        connections = new CopyOnWriteArrayList<>();
         working = true;
     }
 
@@ -34,6 +35,7 @@ public class Server implements Runnable{
 
             // Setting server on port
             server = new ServerSocket(12345);
+            log("Server started on port 12345");
             pool = Executors.newCachedThreadPool();
             
             while (working) {
@@ -57,12 +59,14 @@ public class Server implements Runnable{
     public void shutdown(){
         try {
             working = false;
+            pool.shutdown();
             if(!server.isClosed()){
                 server.close();
             }
 
             // If server stop working all connections will shutdown
             for (ConnectionHandler connection : connections){
+                log("Shutting down connection for: " + connection.nickName);
                 connection.shutdown();
             }
 
@@ -80,7 +84,7 @@ public class Server implements Runnable{
         // Sending information
         private PrintWriter out;
 
-
+        // User nickName
         private String nickName;
 
         public ConnectionHandler(Socket clientSocket){
@@ -101,8 +105,8 @@ public class Server implements Runnable{
                 out.println("Enetr your nickname: ");
                 nickName = in.readLine();
 
-                System.out.println(nickName + " connected!");
-                broadcast(nickName + "join to server!");
+                log(nickName + " connected!");
+                broadcast(nickName + " join to server!");
 
                 // Waiting for a new message
                 String message;
@@ -110,16 +114,26 @@ public class Server implements Runnable{
                 while ((message = in.readLine()) != null){
                     // Checking commands
                     if (message.startsWith("/nick")){
+                        log(nickName + " use commend /nick");
                         changeNickName(message);
                     }else if(message.startsWith("/quit")){
-                        broadcast(nickName + " left a server!");
-                        out.print(nickName + " left a server!");
+                        log(nickName + " use commend /quit");
+                        broadcast(nickName + " left the server!");
+                        log(nickName + " left the server!");
                         shutdown();
+                        break;
                     }else if(message.startsWith("/help")){
-                        // TODO: help
+                        log(nickName + " use commend /help");
+                        // TODO: help  
+                    }else if (message.startsWith("/list")) {
+                        log(nickName + " use commend /list");
+                        listUsers();
+                    }else if (message.startsWith("/msg")) {
+                        privateMessage(message);
                     }else{
                         // Server sending message to all users from nickName user
                         broadcast(nickName + ": " + message);
+                        log(nickName + " send message: " + message);
                     }
                 }
 
@@ -130,9 +144,11 @@ public class Server implements Runnable{
 
         public void shutdown(){
             try {
+                connections.remove(this);
                 in.close();
                 out.close();
                 if(!clientSocket.isClosed()){
+                    log("Shutting down connection for: " + nickName);
                     clientSocket.close();
                 }
             } catch (IOException e) {
@@ -158,15 +174,63 @@ public class Server implements Runnable{
         public void changeNickName(String message){
             String[] messageSplit = message.split(" ", 2);
             if (messageSplit.length == 2){
-                System.out.println(nickName + " change his nick to " + messageSplit[1]);
                 broadcast(nickName + " change his nick to " + messageSplit[1]);
                 out.print( "You succesfully change your nickName " + messageSplit[1]);
+                log(nickName + " change his nick to " + messageSplit[1]);
                 nickName = messageSplit[1];
             }else{
-                System.out.println(nickName + " his attempt to change his nickName ended in failure!");
+                log(nickName + " failed to change nickname!");
                 out.print( "Your input was bad. NickName stayed!");
             }
         }
+
+        public void listUsers(){
+            // Start building message
+            StringBuilder message = new StringBuilder();
+
+            message.append("Online users: ");
+            for (ConnectionHandler connection : connections) {
+                message.append("\n").append(connection.nickName);
+            }
+
+            // Send message
+            sendMessage(message.toString());
+            
+        }
+
+        public void privateMessage(String message){
+            // split message
+            String[] messageSplit = message.split(" ", 3);
+
+            // take information from message
+            String targetNick = messageSplit[1];
+            String privateMsg = messageSplit[2];
+
+            boolean found = false;
+
+            log(nickName + " send private message to " + targetNick);
+            // Searching for user
+            for (ConnectionHandler connection : connections) {
+                if (connection.nickName.equals(targetNick)) {
+                    connection.sendMessage("[PM from " + nickName + "] " + privateMsg);
+                    this.sendMessage("[PM to " + targetNick + "] " + privateMsg);
+                    log(targetNick + " get private message frome " + nickName);
+                    found = true;
+                    break;
+                }
+            }
+
+            // if not found
+            if (!found) {
+                log("Server not found user: " + targetNick + ". Message send by " + nickName + " was not recived!");
+                sendMessage("User " + targetNick + " not found.");
+            }
+        }
+        
+    }
+
+    public void log(String message) {
+        System.out.printf("[%s] %s%n", java.time.LocalTime.now(), message);
     }
 
 
