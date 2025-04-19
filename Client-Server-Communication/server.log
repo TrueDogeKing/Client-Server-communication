@@ -78,3 +78,26 @@
 [16:52:56.252978700] Hola connected!
 [16:53:08.147343600] Hola use commend /quit
 [16:53:08.147343600] Hola left the server!
+[17:43:49.561737500] Server started on port 12345
+[17:43:58.262879500] Server shutdown initiated by admin.
+[17:43:58.264830400] Shutting down connection for: null
+[17:43:58.264830400] Shutting down connection for: null
+[17:46:10.772693700] Server started on port 12345
+[17:46:29.168916600] Doge logged in.
+[17:46:29.168916600] Doge connected!
+[17:47:07.241936600] Doge use commend /quit
+[17:47:07.242912500] Doge left the server!
+[17:49:04.968476600] Server started on port 12345
+[17:49:21.248280600] Hola logged in.
+[17:49:21.248280600] Hola connected!
+[17:49:24.658727900] Hola use commend /help
+[17:49:31.029096800] Hola use commend /nick
+[17:49:31.036545500] Hola changed their nickname to Dos
+[17:49:46.408446900] Dos sent private message to Doge
+[17:49:46.419181] Stored offline message for Doge from Dos
+[17:49:49.732736800] Dos use commend /quit
+[17:49:49.732736800] Dos left the server!
+[17:49:57.908781900] Dos logged in.
+[17:49:57.909758700] Dos connected!
+[17:50:03.637161400] Dos use commend /quit
+[17:50:03.638138700] Dos left the server!

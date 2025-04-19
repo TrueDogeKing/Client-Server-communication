@@ -197,15 +197,66 @@ public class Server implements Runnable{
         private void changeNickName(String message){
             String[] messageSplit = message.split(" ", 2);
             if (messageSplit.length == 2){
-                broadcast(nickName + " change his nick to " + messageSplit[1]);
-                out.print( "You succesfully change your nickName " + messageSplit[1]);
-                log(nickName + " change his nick to " + messageSplit[1]);
-                nickName = messageSplit[1];
-            }else{
+                String newNick = messageSplit[1];
+
+                if (userExists(newNick)) {
+                    sendMessage("This nickname is already taken.");
+                    return;
+                }
+
+                if (updateNicknameInFile(nickName, newNick)) {
+                    broadcast(nickName + " changed their nickname to " + newNick);
+                    log(nickName + " changed their nickname to " + newNick);
+                    sendMessage("You successfully changed your nickname to " + newNick);
+                    nickName = newNick;
+                } else {
+                    sendMessage("Failed to change nickname.");
+                }
+            } else {
+                sendMessage("Your input was bad. Usage: /nick <newNickname>");
                 log(nickName + " failed to change nickname!");
-                out.print( "Your input was bad. NickName stayed!");
             }
         }
+
+        private boolean updateNicknameInFile(String oldNick, String newNick) {
+            try {
+                java.io.File file = new java.io.File("users.txt");
+                java.util.List<String> lines = new java.util.ArrayList<>();
+                String password = null;
+
+                // Read users
+                try (BufferedReader reader = new BufferedReader(new java.io.FileReader(file))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        String[] parts = line.split(":");
+                        if (parts[0].equals(oldNick)) {
+                            password = parts[1]; // Save password
+                            continue; // Skip old line
+                        }
+                        lines.add(line);
+                    }
+                }
+
+                // If not found, return false
+                if (password == null) return false;
+
+                // Add new nickname with same password
+                lines.add(newNick + ":" + password);
+
+                // Write back all lines
+                try (PrintWriter writer = new PrintWriter(new java.io.FileWriter(file))) {
+                    for (String l : lines) writer.println(l);
+                }
+
+                return true;
+
+            } catch (IOException e) {
+                log("Error updating nickname in file: " + e.getMessage());
+                return false;
+            }
+        }
+
+
 
         private void listUsers(){
             // Start building message
@@ -265,7 +316,7 @@ public class Server implements Runnable{
                 offlineMessages.get(targetNick).add("[PM from " + nickName + "] " + privateMsg);
                 this.sendMessage("User " + targetNick + " is offline. Message will be delivered when they return.");
                 log("Stored offline message for " + targetNick + " from " + nickName);
-            }else{
+            }else if(!found){
                 this.sendMessage("User " + targetNick + " doesn't exist.");
             }
         }
