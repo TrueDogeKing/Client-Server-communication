@@ -53,6 +53,7 @@ public class Client implements Runnable{
             working = false;
             in.close();
             out.close();
+            log("disconnected from server");
             if(!clientSocket.isClosed()){
                 clientSocket.close();
             }

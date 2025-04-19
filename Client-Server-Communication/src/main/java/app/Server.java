@@ -248,16 +248,18 @@ public class Server implements Runnable{
 
             log(nickName + " sent private message to " + targetNick);
 
+            boolean found=false;
             for (ConnectionHandler connection : connections) {
                 if (connection.nickName.equals(targetNick)) {
                     connection.sendMessage("[PM from " + nickName + "] " + privateMsg);
                     this.sendMessage("[PM to " + targetNick + "] " + privateMsg);
                     log(targetNick + " received private message from " + nickName);
+                    found=true;
                     break;
                 }
             }
 
-            if (userExists(targetNick)) {
+            if (userExists(targetNick) && !found) {
                 // User is offline, store message
                 offlineMessages.putIfAbsent(targetNick, new java.util.ArrayList<>());
                 offlineMessages.get(targetNick).add("[PM from " + nickName + "] " + privateMsg);
