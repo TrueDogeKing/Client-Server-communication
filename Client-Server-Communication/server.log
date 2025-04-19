@@ -40,3 +40,41 @@
 [16:32:05.542596500] Doge logged in.
 [16:32:05.542596500] Delivered offline messages to Doge
 [16:32:05.542596500] Doge connected!
+[16:39:43.862126200] Server started on port 12345
+[16:40:04.056234] Doge logged in.
+[16:40:04.056234] Doge connected!
+[16:47:05.639794] Server started on port 12345
+[16:47:12.881693200] Error validating login.
+[16:47:18.901343500] Error checking if user exists.
+[16:47:18.909322500] Doge registered and joined.
+[16:47:18.909322500] Doge connected!
+[16:47:37.298473400] Doge send message: hola
+[16:47:41.968689400] Doge sent private message to hola
+[16:47:41.972678700] Stored offline message for hola from Doge
+[16:47:56.952759500] Server started on port 12345
+[16:47:58.939757200] Server started on port 12345
+[16:48:06.263291] Doge logged in.
+[16:48:06.264288300] Doge connected!
+[16:48:25.927676500] Hola registered and joined.
+[16:48:25.927676500] Hola connected!
+[16:50:18.939294400] Server started on port 12345
+[16:50:26.457197100] Doge logged in.
+[16:50:26.458194400] Doge connected!
+[16:50:32.716873100] Doge sent private message to Hola
+[16:50:32.719898500] Stored offline message for Hola from Doge
+[16:50:48.908813700] Doge sent private message to tung_tung
+[16:52:10.413794100] Server started on port 12345
+[16:52:16.628995100] Doge logged in.
+[16:52:16.628995100] Doge connected!
+[16:52:25.524462800] Doge sent private message to tungtung
+[16:52:34.128926800] Doge sent private message to Hola
+[16:52:34.129926900] Stored offline message for Hola from Doge
+[16:52:41.691245100] Doge sent private message to Hola
+[16:52:41.692242600] Stored offline message for Hola from Doge
+[16:52:47.322024200] Doge use commend /quit
+[16:52:47.323021600] Doge left the server!
+[16:52:56.251980200] Hola logged in.
+[16:52:56.251980200] Delivered offline messages to Hola
+[16:52:56.252978700] Hola connected!
+[16:53:08.147343600] Hola use commend /quit
+[16:53:08.147343600] Hola left the server!

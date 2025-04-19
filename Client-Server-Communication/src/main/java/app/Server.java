@@ -12,6 +12,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 public class Server implements Runnable{
 
     private ServerSocket server;
@@ -242,7 +245,6 @@ public class Server implements Runnable{
             String targetNick = messageSplit[1];
             String privateMsg = messageSplit[2];
 
-            boolean found = false;
 
             log(nickName + " sent private message to " + targetNick);
 
@@ -251,22 +253,43 @@ public class Server implements Runnable{
                     connection.sendMessage("[PM from " + nickName + "] " + privateMsg);
                     this.sendMessage("[PM to " + targetNick + "] " + privateMsg);
                     log(targetNick + " received private message from " + nickName);
-                    found = true;
                     break;
                 }
             }
 
-            if (!found) {
+            if (userExists(targetNick)) {
                 // User is offline, store message
                 offlineMessages.putIfAbsent(targetNick, new java.util.ArrayList<>());
                 offlineMessages.get(targetNick).add("[PM from " + nickName + "] " + privateMsg);
                 this.sendMessage("User " + targetNick + " is offline. Message will be delivered when they return.");
                 log("Stored offline message for " + targetNick + " from " + nickName);
+            }else{
+                this.sendMessage("User " + targetNick + " doesn't exist.");
+            }
+        }
+
+        public class PasswordUtils {
+
+            public String hashPassword(String password) {
+                try {
+                    MessageDigest md = MessageDigest.getInstance("SHA-256");
+                    byte[] hashBytes = md.digest(password.getBytes());
+                    StringBuilder sb = new StringBuilder();
+
+                    for (byte b : hashBytes) {
+                        sb.append(String.format("%02x", b)); // convert byte to hex
+                    }
+
+                    return sb.toString();
+                } catch (NoSuchAlgorithmException e) {
+                    throw new RuntimeException("Error hashing password", e);
+                }
             }
         }
 
 
         private void Registration() {
+            PasswordUtils passwordUtils=new PasswordUtils();
             while (true) {
                 try {
                     out.println("Welcome! Type 1 to [Login] or 2 to [Register]: ");
@@ -276,9 +299,10 @@ public class Server implements Runnable{
                         out.println("Enter username:");
                         String username = in.readLine();
                         out.println("Enter password:");
-                        String password = in.readLine();
+                        String plainPassword = in.readLine();
+                        String hashedPassword = passwordUtils.hashPassword(plainPassword);
 
-                        if (validateLogin(username, password)) {
+                        if (validateLogin(username, hashedPassword)) {
                             nickName = username;
                             out.println("Login successful! Welcome, " + nickName);
                             log(nickName + " logged in.");
@@ -291,9 +315,10 @@ public class Server implements Runnable{
                         out.println("Choose a username:");
                         String username = in.readLine();
                         out.println("Choose a password:");
-                        String password = in.readLine();
+                        String plainPassword = in.readLine();
+                        String hashedPassword = passwordUtils.hashPassword(plainPassword);
 
-                        if (registerUser(username, password)) {
+                        if (registerUser(username, hashedPassword)) {
                             nickName = username;
                             out.println("Registration successful! Welcome, " + nickName);
                             log(nickName + " registered and joined.");
@@ -315,6 +340,10 @@ public class Server implements Runnable{
         }
 
     }
+
+
+
+
     private boolean userExists(String username) {
         try (BufferedReader reader = new BufferedReader(new java.io.FileReader("users.txt"))) {
             String line;
