@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Objects;
 
 public class Client implements Runnable{
     
@@ -23,7 +24,8 @@ public class Client implements Runnable{
         try {
             // Connect to the server
             clientSocket = new Socket("127.0.0.1", 12345);
-            System.out.println("Connected to the server!");
+            log("Connected to the server!");
+            log("type '/help' see the available commands !");
 
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             out = new PrintWriter(clientSocket.getOutputStream(), true);
@@ -41,7 +43,7 @@ public class Client implements Runnable{
             shutdown(); 
 
         } catch (IOException e) {
-            System.out.println("Connection failed!");
+            log("Connection failed!");
         }
 
     }
@@ -71,7 +73,7 @@ public class Client implements Runnable{
                 while(working){
                     String message = inputReader.readLine();
                     // what to do
-                    if (message == "/quit"){
+                    if (Objects.equals(message, "/quit")){
                         out.println(message);
                         inputReader.close();
                         shutdown();
@@ -89,6 +91,17 @@ public class Client implements Runnable{
     
         
     }
+
+    public void log(String message) {
+        String timestampedMessage = String.format("[%s] %s", java.time.LocalTime.now(), message);
+        System.out.println(timestampedMessage);
+        try (PrintWriter logWriter = new PrintWriter(new java.io.FileWriter("client.log", true))) {
+            logWriter.println(timestampedMessage);
+        } catch (IOException e) {
+            System.out.println("Failed to write to client log.");
+        }
+    }
+
 
     public static void main(String[] args) {
         Client client = new Client();

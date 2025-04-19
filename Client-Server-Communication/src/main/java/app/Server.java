@@ -1,5 +1,6 @@
 package app;
 
+import javax.management.Notification;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -17,6 +18,10 @@ public class Server implements Runnable{
 
     // Connected clinents
     private List<ConnectionHandler> connections;
+
+    // Offline users
+    private java.util.Map<String, List<String>> offlineMessages = new java.util.concurrent.ConcurrentHashMap<>();
+
 
     // Working server
     private boolean working;
@@ -102,8 +107,12 @@ public class Server implements Runnable{
                 //out.println("Hello"); -> Sending information
                 //in.readLine(); -> Reciving information
 
-                out.println("Enetr your nickname: ");
-                nickName = in.readLine();
+                // server entry login or register
+                Registration();
+                UnreadMessages();
+
+
+
 
                 log(nickName + " connected!");
                 broadcast(nickName + " join to server!");
@@ -124,12 +133,14 @@ public class Server implements Runnable{
                         break;
                     }else if(message.startsWith("/help")){
                         log(nickName + " use commend /help");
-                        // TODO: help  
+                        helpCommand();
                     }else if (message.startsWith("/list")) {
                         log(nickName + " use commend /list");
                         listUsers();
                     }else if (message.startsWith("/msg")) {
                         privateMessage(message);
+                    }else if(message.startsWith("/")) {
+                        sendMessage("unknown command");
                     }else{
                         // Server sending message to all users from nickName user
                         broadcast(nickName + ": " + message);
@@ -141,8 +152,17 @@ public class Server implements Runnable{
                 shutdown();
             }
         }
+        public void helpCommand(){
+            sendMessage("Available commands:");
+            sendMessage(" /nick <newNickname> - Change your nickname.");
+            sendMessage(" /quit - Quit the chat and disconnect from the server.");
+            sendMessage(" /help - Show this help message.");
+            sendMessage(" /list - Show list of online users.");
+            sendMessage(" /msg <nickname> <message> - Send a private message to a specific user.");
 
-        public void shutdown(){
+        }
+
+        private void shutdown(){
             try {
                 connections.remove(this);
                 in.close();
@@ -171,7 +191,7 @@ public class Server implements Runnable{
         }
 
         // Changing nickName
-        public void changeNickName(String message){
+        private void changeNickName(String message){
             String[] messageSplit = message.split(" ", 2);
             if (messageSplit.length == 2){
                 broadcast(nickName + " change his nick to " + messageSplit[1]);
@@ -184,7 +204,7 @@ public class Server implements Runnable{
             }
         }
 
-        public void listUsers(){
+        private void listUsers(){
             // Start building message
             StringBuilder message = new StringBuilder();
 
@@ -198,40 +218,157 @@ public class Server implements Runnable{
             
         }
 
-        public void privateMessage(String message){
-            // split message
+        private void UnreadMessages(){
+            sendMessage("Unread messages:");
+            if (offlineMessages.containsKey(nickName)) {
+                List<String> pending = offlineMessages.get(nickName);
+                for (String msg : pending) {
+                    sendMessage(" [Offline] " + msg);
+                }
+                offlineMessages.remove(nickName);
+                log("Delivered offline messages to " + nickName);
+            }
+
+        }
+
+        private void privateMessage(String message) {
             String[] messageSplit = message.split(" ", 3);
 
-            // take information from message
+            if (messageSplit.length < 3) {
+                sendMessage("Invalid command. Use: /msg <username> <message>");
+                return;
+            }
+
             String targetNick = messageSplit[1];
             String privateMsg = messageSplit[2];
 
             boolean found = false;
 
-            log(nickName + " send private message to " + targetNick);
-            // Searching for user
+            log(nickName + " sent private message to " + targetNick);
+
             for (ConnectionHandler connection : connections) {
                 if (connection.nickName.equals(targetNick)) {
                     connection.sendMessage("[PM from " + nickName + "] " + privateMsg);
                     this.sendMessage("[PM to " + targetNick + "] " + privateMsg);
-                    log(targetNick + " get private message frome " + nickName);
+                    log(targetNick + " received private message from " + nickName);
                     found = true;
                     break;
                 }
             }
 
-            // if not found
             if (!found) {
-                log("Server not found user: " + targetNick + ". Message send by " + nickName + " was not recived!");
-                sendMessage("User " + targetNick + " not found.");
+                // User is offline, store message
+                offlineMessages.putIfAbsent(targetNick, new java.util.ArrayList<>());
+                offlineMessages.get(targetNick).add("[PM from " + nickName + "] " + privateMsg);
+                this.sendMessage("User " + targetNick + " is offline. Message will be delivered when they return.");
+                log("Stored offline message for " + targetNick + " from " + nickName);
             }
         }
-        
+
+
+        private void Registration() {
+            while (true) {
+                try {
+                    out.println("Welcome! Type 1 to [Login] or 2 to [Register]: ");
+                    String choice = in.readLine();
+
+                    if ("1".equals(choice)) {
+                        out.println("Enter username:");
+                        String username = in.readLine();
+                        out.println("Enter password:");
+                        String password = in.readLine();
+
+                        if (validateLogin(username, password)) {
+                            nickName = username;
+                            out.println("Login successful! Welcome, " + nickName);
+                            log(nickName + " logged in.");
+                            break;
+                        } else {
+                            out.println("Login failed. Try again.");
+                        }
+
+                    } else if ("2".equals(choice)) {
+                        out.println("Choose a username:");
+                        String username = in.readLine();
+                        out.println("Choose a password:");
+                        String password = in.readLine();
+
+                        if (registerUser(username, password)) {
+                            nickName = username;
+                            out.println("Registration successful! Welcome, " + nickName);
+                            log(nickName + " registered and joined.");
+                            break;
+                        } else {
+                            out.println("Username already exists. Try again.");
+                        }
+
+                    } else {
+                        out.println("Invalid choice. Type 1 to [Login] or 2 to [Register].");
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
+
+            }
+
+        }
+
+    }
+    private boolean userExists(String username) {
+        try (BufferedReader reader = new BufferedReader(new java.io.FileReader("users.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(":");
+                if (parts[0].equals(username)) return true;
+            }
+        } catch (IOException e) {
+            log("Error checking if user exists.");
+        }
+        return false;
     }
 
-    public void log(String message) {
-        System.out.printf("[%s] %s%n", java.time.LocalTime.now(), message);
+    private boolean registerUser(String username, String password) {
+        if (userExists(username)) return false;
+
+        try (PrintWriter writer = new PrintWriter(new java.io.FileWriter("users.txt", true))) {
+            writer.println(username + ":" + password);
+            return true;
+        } catch (IOException e) {
+            log("Error registering user.");
+            return false;
+        }
     }
+
+    private boolean validateLogin(String username, String password) {
+        try (BufferedReader reader = new BufferedReader(new java.io.FileReader("users.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(":");
+                if (parts[0].equals(username) && parts[1].equals(password)) {
+                    return true;
+                }
+            }
+        } catch (IOException e) {
+            log("Error validating login.");
+        }
+        return false;
+    }
+
+
+
+
+
+    private void log(String message) {
+        String timestampedMessage = String.format("[%s] %s", java.time.LocalTime.now(), message);
+        System.out.println(timestampedMessage);
+        try (PrintWriter logWriter = new PrintWriter(new java.io.FileWriter("server.log", true))) {
+            logWriter.println(timestampedMessage);
+        } catch (IOException e) {
+            System.out.println("Failed to write to server log.");
+        }
+    }
+
 
 
     // Running server

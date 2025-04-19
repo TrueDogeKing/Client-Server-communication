@@ -1,0 +1,42 @@
+[16:06:03.484284400] Server started on port 12345
+[16:06:10.929144600] Doge connected!
+[16:06:13.103226700] Doge use commend /help
+[16:06:20.623623600] Doge send private message to Doge
+[16:06:20.624619500] Doge get private message frome Doge
+[16:06:36.127778600] Doge send private message to Hola
+[16:06:36.128776900] Server not found user: Hola. Message send by Doge was not recived!
+[16:07:13.372922600] Doge send message: eter słucha?
+[16:15:52.390865700] Server started on port 12345
+[16:16:34.837749400] Server started on port 12345
+[16:16:43.146177500] Error validating login.
+[16:16:50.681360] Error checking if user exists.
+[16:16:50.683378800] Doge registered and joined.
+[16:16:50.684352] Doge connected!
+[16:16:57.859378] Doge use commend /help
+[16:17:20.728453] Hola registered and joined.
+[16:17:20.728453] Hola connected!
+[16:17:24.994530300] Hola use commend /help
+[16:17:36.525955300] Hola send private message to Doge
+[16:17:36.525955300] Server not found user: Doge. Message send by Hola was not recived!
+[16:19:37.675627900] Server started on port 12345
+[16:19:44.676510] Doge logged in.
+[16:19:44.677509200] Doge connected!
+[16:27:29.109785200] Server started on port 12345
+[16:27:38.539404600] Hola logged in.
+[16:27:38.539404600] Hola connected!
+[16:27:44.499655600] Hola use commend /help
+[16:27:54.565047700] Hola sent private message to Doge
+[16:27:54.566045] Stored offline message for Doge from Hola
+[16:28:06.512412200] Doge logged in.
+[16:28:06.512412200] Delivered offline messages to Doge
+[16:28:06.512412200] Doge connected!
+[16:30:13.811673300] Server started on port 12345
+[16:30:22.008577800] Hola logged in.
+[16:30:22.009576800] Hola connected!
+[16:30:26.574770600] Hola use commend /help
+[16:30:35.821715500] Hola send message: hello everyone
+[16:31:46.448202600] Hola sent private message to Doge
+[16:31:46.448202600] Stored offline message for Doge from Hola
+[16:32:05.542596500] Doge logged in.
+[16:32:05.542596500] Delivered offline messages to Doge
+[16:32:05.542596500] Doge connected!
