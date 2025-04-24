@@ -37,6 +37,25 @@ public class Server implements Runnable{
         working = true;
     }
 
+    private void startConsoleListener() {
+        Thread consoleThread = new Thread(() -> {
+            try (BufferedReader consoleReader = new BufferedReader(new InputStreamReader(System.in))) {
+                while (working) {
+                    String input = consoleReader.readLine();
+                    if ("exit".equalsIgnoreCase(input)) {
+                        log("Server shutdown initiated via console");
+                        shutdown();
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                log("Console listener error: " + e.getMessage());
+            }
+        });
+        consoleThread.setDaemon(true);
+        consoleThread.start();
+    }
+
     @Override
     public void run() {
         try {
@@ -45,9 +64,12 @@ public class Server implements Runnable{
             server = new ServerSocket(12345);
             log("Server started on port 12345");
             pool = Executors.newCachedThreadPool();
-            
+
+            // Start console listener for shutdown command
+            startConsoleListener();
+
             while (working) {
-                // Server accpet connections
+                // Server accept connections
                 Socket clientSocket = server.accept();
         
                 // Adding connection
